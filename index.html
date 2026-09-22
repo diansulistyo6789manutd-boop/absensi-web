@@ -3,88 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Form Absensi Online</title>
+  <title>Absensi Web Online</title>
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    body {
-      background-color: #f4f6f9;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-    }
-    .card {
-      background: #ffffff;
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 420px;
-    }
-    h2 {
-      text-align: center;
-      color: #333;
-      margin-top: 0;
-    }
-    .form-group {
-      margin-bottom: 16px;
-    }
-    label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: #555;
-    }
-    input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    .camera-box {
-      width: 100%;
-      height: 240px;
-      background-color: #000;
-      border-radius: 8px;
-      overflow: hidden;
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    video, canvas {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    canvas {
-      display: none;
-    }
-    .btn {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      font-size: 15px;
-      font-weight: bold;
-      color: #fff;
-      cursor: pointer;
-      margin-bottom: 10px;
-    }
-    .btn-camera { background-color: #ff9800; }
-    .btn-submit { background-color: #4CAF50; }
-    .btn:disabled { background-color: #cccccc; cursor: not-allowed; }
-    #status {
-      text-align: center;
-      font-weight: bold;
-      margin-top: 10px;
-      font-size: 14px;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .card { background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 420px; }
+    h2 { text-align: center; color: #333; margin-bottom: 20px; font-weight: 600; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; margin-bottom: 6px; font-weight: 500; color: #555; }
+    input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; }
+    .camera-container { text-align: center; background: #000; border-radius: 8px; overflow: hidden; position: relative; margin-top: 5px; }
+    video, canvas { width: 100%; height: 220px; object-fit: cover; display: block; }
+    .btn-cam { width: 100%; margin-top: 6px; background: #ff9800; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-submit { width: 100%; padding: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    .btn-submit:disabled { background-color: #cccccc; cursor: not-allowed; }
+    #alert { margin-top: 15px; padding: 10px; border-radius: 8px; display: none; font-size: 14px; text-align: center; }
+    .alert-success { background-color: #d4edda; color: #155724; }
+    .alert-error { background-color: #f8d7da; color: #721c24; }
   </style>
 </head>
 <body>
@@ -92,91 +27,85 @@
   <div class="card">
     <h2>Form Absensi Selfie</h2>
     
-    <div class="form-group">
-      <label for="karyawanId">ID Karyawan / Nama:</label>
-      <input type="text" id="karyawanId" placeholder="Masukkan ID atau Nama" required>
-    </div>
-
-    <div class="form-group">
-      <label>Foto Selfie:</label>
-      <div class="camera-box">
-        <video id="video" autoplay playsinline></video>
-        <canvas id="canvas"></canvas>
+    <form id="attendanceForm">
+      <!-- ID / Nama Karyawan -->
+      <div class="form-group">
+        <label for="karyawan_id">Nama / ID Karyawan</label>
+        <input type="text" id="karyawan_id" placeholder="Masukkan ID atau Nama" required>
       </div>
-      <button type="button" class="btn btn-camera" id="btnCapture" onclick="takeSnapshot()">Ambil Foto</button>
-    </div>
 
-    <div class="form-group">
-      <label>Lokasi GPS:</label>
-      <input type="text" id="gpsLocation" placeholder="Mendapatkan lokasi..." readonly required>
-    </div>
+      <!-- Tipe Absen -->
+      <div class="form-group">
+        <label for="tipe_absen">Tipe Absen</label>
+        <select id="tipe_absen" required>
+          <option value="Masuk">Absen Masuk</option>
+          <option value="Pulang">Absen Pulang</option>
+        </select>
+      </div>
 
-    <button type="button" class="btn btn-submit" id="btnSubmit" onclick="kirimAbsensi()">Kirim Absensi</button>
+      <!-- Kamera Selfie -->
+      <div class="form-group">
+        <label>Foto Selfie</label>
+        <div class="camera-container">
+          <video id="video" autoplay playsinline></video>
+          <canvas id="canvas" style="display:none;"></canvas>
+        </div>
+        <button type="button" class="btn-cam" id="btnCapture" onclick="takeSnapshot()">Ambil Foto</button>
+      </div>
 
-    <div id="status"></div>
+      <!-- GPS Location -->
+      <div class="form-group">
+        <label for="koordinat_gps">Lokasi GPS</label>
+        <input type="text" id="koordinat_gps" placeholder="Mendapatkan lokasi..." readonly required>
+      </div>
+
+      <button type="submit" id="btnSubmit" class="btn-submit">Kirim Absensi</button>
+    </form>
+
+    <div id="alert"></div>
   </div>
 
   <script>
-    // ------------------------------------------------------------------
-    // GANTI URL DI BAWAH INI DENGAN URL GOOGLE APPS SCRIPT MILIKMU!
-    // ------------------------------------------------------------------
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7KhX9wB7atwIBh4gUUkLCVe_fHiCkXyJLOyOnkQe-Ybdl1XbyBBu9PEtb2bWcV8u6/exec;
+    // URL Apps Script Milik Kamu
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxnaHRuB3qer_gYfvlDWHzZDrrqafCVI2sU-_p6bQJ0Oos_O9YT-g0UxIp-iWfuZDdg/exec";
+
+    let photoData = "";
 
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
-    const gpsInput = document.getElementById('gpsLocation');
-    const statusDiv = document.getElementById('status');
-    let photoData = "";
+    const gpsInput = document.getElementById("koordinat_gps");
 
-    // 1. Inisialisasi Kamera & GPS saat halaman dimuat
+    // 1. Jalankan Kamera & Ambil Lokasi GPS Otomatis Saat Halaman Dimuat
     window.onload = function() {
-      startCamera();
-      getGPSLocation();
-    };
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+        .then(stream => { video.srcObject = stream; })
+        .catch(err => { alert("Gagal mengakses kamera: " + err.message); });
 
-    function startCamera() {
-      navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" },
-        audio: false
-      })
-      .then(stream => {
-        video.srcObject = stream;
-      })
-      .catch(err => {
-        alert("Gagal mengakses kamera: " + err.message);
-      });
-    }
-
-    function getGPSLocation() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          pos => {
-            gpsInput.value = pos.coords.latitude + ", " + pos.coords.longitude;
+          (pos) => {
+            gpsInput.value = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
           },
-          err => {
+          () => {
             gpsInput.value = "Gagal mengambil lokasi";
-            alert("Akses lokasi ditolak/gagal. Pastikan GPS aktif.");
+            alert("Akses GPS tidak diizinkan. Aktifkan lokasi di HP.");
           },
           { enableHighAccuracy: true }
         );
       } else {
         gpsInput.value = "GPS tidak didukung";
       }
-    }
+    };
 
-    // 2. Fungsi Ambil Foto (Sudah dioptimalkan ukurannya)
+    // 2. Ambil Foto (Snapshot & Kompresi Canvas)
     function takeSnapshot() {
       const btnCam = document.getElementById('btnCapture');
       if (canvas.style.display === "none") {
         const context = canvas.getContext('2d');
-        
-        // Ukuran diatur kecil (320x240) agar file ringan & cepat masuk DB
         canvas.width = 320;
         canvas.height = 240;
-        
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Kompres foto ke format JPEG dengan kualitas 70%
         photoData = canvas.toDataURL('image/jpeg', 0.7);
 
         video.style.display = "none";
@@ -193,59 +122,52 @@
     }
 
     // 3. Kirim Data ke Google Apps Script
-    function kirimAbsensi() {
-      const karyawanId = document.getElementById('karyawanId').value.trim();
-      const gps = gpsInput.value;
-      const btnSubmit = document.getElementById('btnSubmit');
+    document.getElementById("attendanceForm").addEventListener("submit", function(e) {
+      e.preventDefault();
 
-      if (!karyawanId) {
-        alert("Silakan isi ID Karyawan / Nama!");
-        return;
-      }
       if (!photoData) {
         alert("Silakan ambil foto selfie terlebih dahulu!");
         return;
       }
-      if (!gps || gps.includes("Gagal")) {
-        alert("Lokasi GPS belum didapatkan!");
-        return;
-      }
+
+      const btnSubmit = document.getElementById("btnSubmit");
+      const alertBox = document.getElementById("alert");
 
       btnSubmit.disabled = true;
-      statusDiv.style.color = "blue";
-      statusDiv.innerText = "Mengirim data absensi...";
+      btnSubmit.innerText = "Mengirim...";
+      alertBox.style.display = "none";
 
       const payload = {
-        karyawan_id: karyawanId,
-        foto_base64: photoData,
-        gps: gps
+        karyawan_id: document.getElementById("karyawan_id").value,
+        tipe_absen: document.getElementById("tipe_absen").value,
+        gps: document.getElementById("koordinat_gps").value,
+        foto_base64: photoData
       };
 
       fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors', // Penting agar tidak terkendala CORS dari Google
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       })
       .then(() => {
-        statusDiv.style.color = "green";
-        statusDiv.innerText = "Absensi Berhasil Terkirim!";
-        alert("Absensi berhasil terkirim!");
-        
-        // Reset Form
-        document.getElementById('karyawanId').value = "";
-        takeSnapshot(); // Kembali ke tampilan kamera
-        btnSubmit.disabled = false;
+        alertBox.className = "alert-success";
+        alertBox.innerText = "✅ Absensi & Selfie Berhasil Terkirim!";
+        alertBox.style.display = "block";
+
+        document.getElementById("attendanceForm").reset();
+        if (canvas.style.display === "block") takeSnapshot();
       })
-      .catch(err => {
-        statusDiv.style.color = "red";
-        statusDiv.innerText = "Gagal mengirim data.";
-        alert("Error: " + err.message);
+      .catch((err) => {
+        alertBox.className = "alert-error";
+        alertBox.innerText = "❌ Gagal: " + err.message;
+        alertBox.style.display = "block";
+      })
+      .finally(() => {
         btnSubmit.disabled = false;
+        btnSubmit.innerText = "Kirim Absensi";
       });
-    }
+    });
   </script>
 </body>
 </html>

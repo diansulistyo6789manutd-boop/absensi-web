@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Web Absensi</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .card { background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+    h2 { text-align: center; color: #333; margin-bottom: 20px; font-weight: 600; }
+    .form-group { margin-bottom: 18px; }
+    label { display: block; margin-bottom: 6px; font-weight: 500; color: #555; }
+    input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; transition: border 0.3s; }
+    input:focus, select:focus, textarea:focus { border-color: #4CAF50; }
+    .gps-box { display: flex; gap: 8px; }
+    .btn-gps { background: #2196F3; color: white; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+    .btn-gps:hover { background: #1e88e5; }
+    .btn-submit { width: 100%; padding: 14px; background-color: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
+    .btn-submit:hover { background-color: #45a049; }
+    .btn-submit:disabled { background-color: #cccccc; cursor: not-allowed; }
+    #alert { margin-top: 15px; padding: 12px; border-radius: 8px; display: none; font-size: 14px; text-align: center; }
+    .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>Form Absensi</h2>
+    
+    <form id="attendanceForm">
+      <!-- ID / NIP Karyawan -->
+      <div class="form-group">
+        <label for="karyawan_id">ID Karyawan / NIP</label>
+        <input type="text" id="karyawan_id" placeholder="Contoh: KRY001" required>
+      </div>
+
+      <!-- Tipe Absen -->
+      <div class="form-group">
+        <label for="tipe_absen">Tipe Absen</label>
+        <select id="tipe_absen" required>
+          <option value="Masuk">Absen Masuk</option>
+          <option value="Pulang">Absen Pulang</option>
+        </select>
+      </div>
+
+      <!-- GPS Location -->
+      <div class="form-group">
+        <label for="koordinat_gps">Lokasi GPS</label>
+        <div class="gps-box">
+          <input type="text" id="koordinat_gps" placeholder="Klik Dapatkan Lokasi" readonly required>
+          <button type="button" class="btn-gps" onclick="getGPSLocation()">Ambil GPS</button>
+        </div>
+      </div>
+
+      <!-- Keterangan -->
+      <div class="form-group">
+        <label for="keterangan">Keterangan (Opsional)</label>
+        <textarea id="keterangan" rows="2" placeholder="Catatan tambahan..."></textarea>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" id="btnSubmit" class="btn-submit">Kirim Absen</button>
+    </form>
+
+    <!-- Notifikasi -->
+    <div id="alert"></div>
+  </div>
+
+  <script>
+    // ⚠️ GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT KAMU
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx.../exec"; "https://script.google.com/macros/s/AKfycbwCAVM6dIgJOpjJcGtt7KOJ9aNqQc218E5RDhvsAJ0_KcnPygVP0l8ZILK9-cWneaqa/exec";
+
+    // 1. Fungsi Ambil Lokasi GPS dari HP/Browser
+    function getGPSLocation() {
+      const gpsInput = document.getElementById("koordinat_gps");
+      if (navigator.geolocation) {
+        gpsInput.placeholder = "Mengambil lokasi...";
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude.toFixed(6);
+            const lng = position.coords.longitude.toFixed(6);
+            gpsInput.value = `${lat}, ${lng}`;
+          },
+          (error) => {
+            alert("Gagal mengambil lokasi GPS. Pastikan izin lokasi/GPS sudah diaktifkan.");
+            gpsInput.placeholder = "Klik Dapatkan Lokasi";
+          }
+        );
+      } else {
+        alert("Browser Anda tidak mendukung fitur Geolocation.");
+      }
+    }
+
+    // 2. Handling Kirim Data ke Google Sheets
+    document.getElementById("attendanceForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const btnSubmit = document.getElementById("btnSubmit");
+      const alertBox = document.getElementById("alert");
+
+      // Tampilkan status loading
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = "MIMIN DANG PROSES...";
+      alertBox.style.display = "none";
+
+      // Susun payload JSON
+      const payload = {
+        karyawan_id: document.getElementById("karyawan_id").value,
+        tipe_absen: document.getElementById("tipe_absen").value,
+        koordinat_gps: document.getElementById("koordinat_gps").value,
+        foto_url: "-", // Bisa dikembangkan untuk foto
+        keterangan: document.getElementById("keterangan").value
+      };
+
+      // Kirim via Fetch API ke Google Apps Script
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors", // Wajib untuk mengatasi kendala CORS pada Google Apps Script
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then(() => {
+        // Tampilkan pesan berhasil
+        alertBox.className = "alert-success";
+        alertBox.innerText = "✅ Absensi berhasil dicatat!";
+        alertBox.style.display = "block";
+
+        // Reset form
+        document.getElementById("attendanceForm").reset();
+      })
+      .catch((error) => {
+        // Tampilkan pesan error
+        alertBox.className = "alert-error";
+        alertBox.innerText = "❌ Gagal mengirim absensi: " + error.message;
+        alertBox.style.display = "block";
+      })
+      .finally(() => {
+        btnSubmit.disabled = false;
+        btnSubmit.innerText = "Kirim Absen";
+      });
+    });
+  </script>
+</body>
+</html>
